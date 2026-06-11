@@ -1,0 +1,8 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { DashboardViewWithAuth } from '../components/dashboard/DashboardView';
+---
+
+<Layout title="Dashboard | SheetPilot AI" description="View spreadsheet analysis limits, commands counters, saved workflow operations, and recent spreadsheet files.">
+  <DashboardViewWithAuth client:only="react" />
+</Layout>

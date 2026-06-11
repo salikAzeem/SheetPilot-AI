@@ -1,0 +1,89 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { blogPosts } from '../../utils/blogData';
+
+export async function getStaticPaths() {
+  return blogPosts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post }
+  }));
+}
+
+const { post } = Astro.props;
+
+// Basic text helper to convert markdown headers and backticks into simple HTML markup safely
+const renderContent = (content: string) => {
+  return content
+    .replace(/^## (.*$)/gim, '<h2 class="display-sm text-ink pt-6 pb-2">$1</h2>')
+    .replace(/^### (.*$)/gim, '<h3 class="font-semibold text-ink pt-4 pb-1">$1</h3>')
+    .replace(/^\* (.*$)/gim, '<li class="list-disc pl-5 ml-4">$1</li>')
+    .replace(/^1\. (.*$)/gim, '<li class="list-decimal pl-5 ml-4">$1</li>')
+    .replace(/`(.*?)`/g, '<code class="font-mono bg-canvas-soft-2 px-1.5 py-0.5 border border-hairline rounded text-xs text-violet">$1</code>')
+    .replace(/\n\n/g, '<p class="text-xs text-body leading-relaxed py-2"></p>')
+    .replace(/> "(.*?)"/g, '<blockquote class="border-l-2 border-primary pl-4 py-1.5 my-3 italic text-xs text-ink bg-canvas-soft-2 rounded-r">$1</blockquote>');
+};
+---
+
+<Layout 
+  title={`${post.title} | SheetPilot AI`} 
+  description={post.description}
+>
+  <div className="bg-canvas-soft text-ink font-sans min-h-screen pb-20 relative">
+    <div className="mesh-gradient-bg" />
+
+    {/* Top Header */}
+    <header className="sticky top-0 bg-canvas/80 backdrop-blur-md border-b border-hairline h-16 flex items-center justify-between px-6 md:px-12 z-40">
+      <div className="flex items-center gap-2">
+        <a href="/" className="flex items-center gap-2">
+          <div className="p-1 bg-primary text-on-primary rounded">
+            <svg className="w-5 h-5 fill-on-primary" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2zm0 3.8L19.2 18H4.8L12 5.8z"/></svg>
+          </div>
+          <span className="font-semibold text-base tracking-tight">SheetPilot AI</span>
+        </a>
+      </div>
+      <div className="flex items-center gap-3">
+        <a href="/blog" className="btn-secondary h-8 px-4 text-xs">All Articles</a>
+        <a href="/auth/login" className="btn-primary h-8 px-4 text-xs">Get Started</a>
+      </div>
+    </header>
+
+    {/* Main Blog Body */}
+    <article className="max-w-2xl mx-auto px-6 pt-16 space-y-6">
+      
+      {/* Eyebrow metadata */}
+      <div className="flex items-center gap-3 text-xs font-mono text-mute">
+        <a href={`/blog?category=${post.category}`} className="px-2.5 py-0.5 bg-canvas border border-hairline rounded text-body hover:border-hairline-strong uppercase">
+          {post.category}
+        </a>
+        <span>•</span>
+        <span>{new Date(post.publishDate).toLocaleDateString()}</span>
+      </div>
+
+      <h1 className="display-lg text-ink font-bold leading-tight">
+        {post.title}
+      </h1>
+
+      <p className="text-body text-sm italic border-l-4 border-hairline pl-4 py-1 leading-relaxed">
+        {post.description}
+      </p>
+
+      {/* Main post contents */}
+      <div className="pt-6 font-sans space-y-4 text-xs leading-relaxed" set:html={renderContent(post.content)}>
+      </div>
+
+      {/* Related articles footer links */}
+      <div className="border-t border-hairline pt-12 mt-12 space-y-4">
+        <h3 className="text-xs font-mono font-semibold uppercase tracking-wider text-mute">Related Keywords</h3>
+        <div className="flex flex-wrap gap-2">
+          {post.keywords.map((kw) => (
+            <span className="px-3 py-1 bg-canvas border border-hairline rounded-full text-xs text-body">
+              #{kw}
+            </span>
+          ))}
+        </div>
+      </div>
+
+    </article>
+
+  </div>
+</Layout>

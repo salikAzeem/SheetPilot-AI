@@ -1,0 +1,8 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { WorkspaceViewWithAuth } from '../components/workspace/WorkspaceView';
+---
+
+<Layout title="AI Sheet Workspace | SheetPilot AI" description="Use plain English commands with Gemini to automate spreadsheet cleaning, rename columns, filter datasets, and generate formulas.">
+  <WorkspaceViewWithAuth client:only="react" />
+</Layout>

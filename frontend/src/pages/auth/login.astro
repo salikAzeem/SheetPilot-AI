@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { LoginViewWithAuth } from '../../components/auth/LoginView';
+---
+
+<Layout title="Sign In | SheetPilot AI" description="Sign in to your SheetPilot AI account with Google to sync spreadsheet sheets and clean datasets.">
+  <LoginViewWithAuth client:only="react" />
+</Layout>
