@@ -329,7 +329,7 @@ export const LandingPage: React.FC = () => {
       <footer className="border-t border-hairline bg-canvas py-12 px-6 md:px-12 text-xs text-mute text-center font-sans space-y-3">
         <p className="font-semibold text-ink">SheetPilot AI Inc.</p>
         <p>A stark black-and-ink duet platform built for spreadsheet operations.</p>
-        <p>© {new Date().getFullYear()} All rights reserved.</p>
+        <p>© {new Date().getFullYear()} All rights reserved. • <a href="/privacy" className="hover:text-ink underline transition-all">Privacy Policy</a></p>
       </footer>
     </div>
   );

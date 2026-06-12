@@ -394,7 +394,7 @@ export const DashboardView: React.FC = () => {
 
       {/* Footer copyright links */}
       <footer className="border-t border-hairline py-6 text-center text-xs text-mute mt-auto shrink-0 bg-canvas">
-        © {new Date().getFullYear()} SheetPilot AI Inc. stark black-and-ink duet layout.
+        © {new Date().getFullYear()} SheetPilot AI Inc. • <a href="/privacy" className="hover:text-ink underline transition-all">Privacy Policy</a>
       </footer>
     </div>
   );
