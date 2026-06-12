@@ -242,6 +242,11 @@ export const WorkspaceView: React.FC = () => {
   // Google sheets Import
   const handleGoogleSheetImport = async () => {
     if (!googleSpreadsheetId) return;
+    if (!user) {
+      alert('Sign in required. Please sign in with Google to import from Google Sheets.');
+      window.location.href = '/auth/login';
+      return;
+    }
     setImportingSheet(true);
     try {
       // Extract raw spreadsheet ID if a full Google Sheets URL is pasted
@@ -281,6 +286,11 @@ export const WorkspaceView: React.FC = () => {
   // Export back to Google Sheet
   const handleGoogleSheetExport = async () => {
     if (!activeSheet || !activeSheet.googleSheetId) return;
+    if (!user) {
+      alert('Sign in required. Please sign in with Google to export to Google Sheets.');
+      window.location.href = '/auth/login';
+      return;
+    }
     try {
       await api.exportGoogleSheet(
         activeSheet.googleSheetId,
@@ -297,6 +307,11 @@ export const WorkspaceView: React.FC = () => {
   // Download Excel
   const handleDownload = async () => {
     if (!activeSheet) return;
+    if (!user) {
+      alert('Sign in required. Please sign in with Google to download spreadsheets.');
+      window.location.href = '/auth/login';
+      return;
+    }
     try {
       const blob = await api.downloadExcel(activeSheet.columns, activeSheet.data, activeSheet.name);
       const url = window.URL.createObjectURL(blob);

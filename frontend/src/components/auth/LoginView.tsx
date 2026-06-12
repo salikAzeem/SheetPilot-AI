@@ -59,10 +59,8 @@ export const LoginView: React.FC = () => {
     const redirectUri = encodeURIComponent(`${window.location.origin}/auth/login`);
     const clientId = encodeURIComponent(GOOGLE_CLIENT_ID);
     
-    // Scopes include OpenID profile info + Google Sheets spreadsheet modify access
-    const scope = encodeURIComponent(
-      'openid email profile https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly'
-    );
+    // Scopes include standard non-sensitive OpenID profile info to avoid unverified warning screens
+    const scope = encodeURIComponent('openid email profile');
     
     const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
     
@@ -109,29 +107,15 @@ export const LoginView: React.FC = () => {
                 Verifying credentials...
               </button>
             ) : (
-              <div className="space-y-3.5 w-full">
-                <button
-                  onClick={handleGoogleRedirect}
-                  className="btn-primary w-full inline-flex items-center justify-center gap-2 hover:bg-black/95 transition-all shadow"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In with Google Account
-                </button>
-                
-                <button
-                  onClick={handleMockLogin}
-                  className="btn-secondary w-full inline-flex items-center justify-center gap-2 transition-all"
-                >
-                  <Sparkles className="w-4 h-4 text-violet" />
-                  Demo Sign In (Bypass Google)
-                </button>
-
-                {/* Developer Tip for Bypass */}
-                <div className="p-3 border border-warning/30 bg-warning-soft text-warning-deep rounded-lg text-[11px] leading-relaxed text-center font-sans">
-                  <span className="font-semibold block mb-0.5">⚠️ Unverified App Warning?</span>
-                  If Google blocks you, click <span className="font-semibold">"Advanced"</span> (bottom-left) and select <span className="font-semibold">"Go to SheetPilot AI (unsafe)"</span> to bypass.
-                </div>
-              </div>
+            <div className="space-y-3.5 w-full">
+              <button
+                onClick={handleGoogleRedirect}
+                className="btn-primary w-full inline-flex items-center justify-center gap-2 hover:bg-black/95 transition-all shadow"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In with Google Account
+              </button>
+            </div>
             )}
           </div>
 
