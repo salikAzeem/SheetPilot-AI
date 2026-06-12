@@ -71,6 +71,287 @@ export interface IGeminiReportResponse {
   reportData: Record<string, any>[];
 }
 
+// ==========================================
+// LOCAL RULE-BASED FALLBACK PARSERS
+// ==========================================
+
+const parseCommandLocally = (prompt: string, columns: string[]): IGeminiTransformResponse => {
+  const cleanPrompt = prompt.trim().toLowerCase();
+
+  // 1. Delete / Remove Row
+  const deleteRowMatch = prompt.match(/(?:delete|remove|delete\s+row|remove\s+row)\s+row\s*(\d+)/i) || 
+                       prompt.match(/(?:delete|remove)\s+(\d+)/i) ||
+                       prompt.match(/(?:delete|remove)\s+row\s*(\d+)/i);
+  if (deleteRowMatch) {
+    const rowNumber = parseInt(deleteRowMatch[1], 10);
+    const idx = rowNumber - 1;
+    return {
+      explanation: `Local Engine: Scheduled removal of row number ${rowNumber} from the active dataset.`,
+      actions: [{
+        type: 'delete_row',
+        params: { index: idx },
+        description: `Delete row at row number ${rowNumber}`
+      }]
+    };
+  }
+
+  // 2. Remove duplicates
+  if (cleanPrompt.includes('duplicate') || cleanPrompt.includes('dedup')) {
+    return {
+      explanation: 'Local Engine: Scanning spreadsheet columns and pruning identical duplicate records.',
+      actions: [{
+        type: 'remove_duplicates',
+        params: { keys: [] },
+        description: 'Remove duplicate rows'
+      }]
+    };
+  }
+
+  // 3. Remove blank rows
+  if (cleanPrompt.includes('blank') || cleanPrompt.includes('empty')) {
+    return {
+      explanation: 'Local Engine: Identifying and deleting rows where all fields are empty or white-spaces.',
+      actions: [{
+        type: 'remove_blank_rows',
+        params: { keys: [] },
+        description: 'Remove blank rows'
+      }]
+    };
+  }
+
+  // 4. Rename column
+  const renameColumnMatch = prompt.match(/rename\s+column\s+["']?([^"'\s]+)["']?\s+to\s+["']?([^"'\s]+)["']?/i) || 
+                       prompt.match(/rename\s+["']?([^"'\s]+)["']?\s+to\s+["']?([^"'\s]+)["']?/i);
+  if (renameColumnMatch) {
+    const oldName = renameColumnMatch[1];
+    const newName = renameColumnMatch[2];
+    const matchedCol = columns.find(c => c.toLowerCase() === oldName.toLowerCase()) || oldName;
+    return {
+      explanation: `Local Engine: Renaming active column header "${matchedCol}" to "${newName}".`,
+      actions: [{
+        type: 'rename_column',
+        params: { oldName: matchedCol, newName },
+        description: `Rename column ${matchedCol} to ${newName}`
+      }]
+    };
+  }
+
+  // 5. Delete column
+  const deleteColumnMatch = prompt.match(/(?:delete|remove)\s+column\s+["']?([^"'\s]+)["']?/i);
+  if (deleteColumnMatch) {
+    const colName = deleteColumnMatch[1];
+    const matchedCol = columns.find(c => c.toLowerCase() === colName.toLowerCase()) || colName;
+    return {
+      explanation: `Local Engine: Deleting column "${matchedCol}" from the spreadsheet schema.`,
+      actions: [{
+        type: 'delete_column',
+        params: { name: matchedCol },
+        description: `Delete column ${matchedCol}`
+      }]
+    };
+  }
+
+  // 6. Sort data
+  const sortMatch = prompt.match(/sort\s+(?:by\s+)?["']?([^"'\s]+)["']?(?:\s+(asc|desc|ascending|descending))?/i);
+  if (sortMatch) {
+    const colName = sortMatch[1];
+    const orderRaw = sortMatch[2] || 'asc';
+    const order = orderRaw.toLowerCase().startsWith('desc') ? 'desc' : 'asc';
+    const matchedCol = columns.find(c => c.toLowerCase() === colName.toLowerCase()) || colName;
+    return {
+      explanation: `Local Engine: Sorting dataset rows alphabetically/numerically by column "${matchedCol}" in ${order}ending order.`,
+      actions: [{
+        type: 'sort_data',
+        params: { column: matchedCol, order },
+        description: `Sort data by column ${matchedCol} (${order})`
+      }]
+    };
+  }
+
+  // 7. Filter data
+  const filterMatch = prompt.match(/filter\s+(?:where\s+)?["']?([^"'\s]+)["']?\s+(equals|contains|gt|lt|>|<|=)\s+["']?([^"'\s]+)["']?/i);
+  if (filterMatch) {
+    const colName = filterMatch[1];
+    let op = filterMatch[2].toLowerCase();
+    const value = filterMatch[3];
+    
+    if (op === '>' || op === 'gt') op = 'gt';
+    else if (op === '<' || op === 'lt') op = 'lt';
+    else if (op === '=' || op === 'equals') op = 'equals';
+    else op = 'contains';
+
+    const matchedCol = columns.find(c => c.toLowerCase() === colName.toLowerCase()) || colName;
+    return {
+      explanation: `Local Engine: Filtering rows to show only where column "${matchedCol}" ${op} "${value}".`,
+      actions: [{
+        type: 'filter_data',
+        params: { column: matchedCol, operator: op, value },
+        description: `Filter rows where ${matchedCol} ${op} "${value}"`
+      }]
+    };
+  }
+
+  return {
+    explanation: 'Local Engine Fallback: Gemini API is currently unavailable. Please try simpler spreadsheet instructions like "delete row 6", "rename column X to Y", or "sort by Z".',
+    actions: []
+  };
+};
+
+const generateFormulaLocally = (prompt: string, columns: string[]): IGeminiFormulaResponse => {
+  const cleanPrompt = prompt.toLowerCase();
+  
+  // Try to find two matching columns in the prompt
+  const matchedCols = columns.filter(col => cleanPrompt.includes(col.toLowerCase()));
+  
+  if (matchedCols.length >= 2) {
+    const col1 = matchedCols[0];
+    const col2 = matchedCols[1];
+    
+    let op = '-';
+    let opWord = 'minus';
+    if (cleanPrompt.includes('+') || cleanPrompt.includes('add') || cleanPrompt.includes('plus') || cleanPrompt.includes('sum')) {
+      op = '+';
+      opWord = 'plus';
+    } else if (cleanPrompt.includes('*') || cleanPrompt.includes('multiply') || cleanPrompt.includes('times')) {
+      op = '*';
+      opWord = 'multiplied by';
+    } else if (cleanPrompt.includes('/') || cleanPrompt.includes('divide')) {
+      op = '/';
+      opWord = 'divided by';
+    }
+
+    return {
+      formula: `=${col1}1${op}${col2}1`,
+      explanation: `Local Formula Fallback: Combines columns "${col1}" and "${col2}" using mathematical operator ${op}.`,
+      expression: `{${col1}} ${op} {${col2}}`,
+      targetColumn: `${col1}_${col2}_Calculated`
+    };
+  }
+
+  return {
+    formula: `=${columns[0] || 'A'}1 * 1.1`,
+    explanation: 'Local Formula Fallback: Multiplies cell values by 1.1.',
+    expression: `{${columns[0] || 'A'}} * 1.1`,
+    targetColumn: 'Calculated_Column'
+  };
+};
+
+const generateDashboardLocally = (
+  prompt: string,
+  columns: string[],
+  data: Record<string, any>[]
+): IGeminiDashboardResponse => {
+  // Identify numeric columns
+  const numericCols = columns.filter(col => {
+    return data.slice(0, 10).some(row => {
+      const val = Number(row[col]);
+      return !isNaN(val) && row[col] !== '';
+    });
+  });
+
+  const stringCols = columns.filter(col => !numericCols.includes(col));
+  const kpis: { label: string; value: string | number }[] = [];
+  const charts: any[] = [];
+
+  kpis.push({ label: 'Total Rows Count', value: data.length });
+
+  if (numericCols.length > 0) {
+    const mainNumCol = numericCols[0];
+    const total = data.reduce((acc, row) => acc + (Number(row[mainNumCol]) || 0), 0);
+    const avg = data.length > 0 ? Math.round(total / data.length) : 0;
+    
+    kpis.push({ label: `Total ${mainNumCol}`, value: total.toLocaleString() });
+    kpis.push({ label: `Average ${mainNumCol}`, value: avg.toLocaleString() });
+
+    const labels = data.slice(0, 5).map((row, idx) => {
+      const nameCol = stringCols.find(c => c.toLowerCase() === 'name' || c.toLowerCase() === 'email') || stringCols[0];
+      return row[nameCol] ? String(row[nameCol]) : `Row ${idx + 1}`;
+    });
+    const values = data.slice(0, 5).map(row => Number(row[mainNumCol]) || 0);
+
+    charts.push({
+      type: 'bar',
+      title: `${mainNumCol} Analytics Overview`,
+      labels,
+      values
+    });
+  } else {
+    const mainStrCol = stringCols[0] || columns[0];
+    const counts: Record<string, number> = {};
+    data.slice(0, 50).forEach(row => {
+      const val = String(row[mainStrCol] || 'Other');
+      counts[val] = (counts[val] || 0) + 1;
+    });
+
+    const labels = Object.keys(counts).slice(0, 5);
+    const values = Object.values(counts).slice(0, 5) as number[];
+
+    kpis.push({ label: `Unique ${mainStrCol}`, value: Object.keys(counts).length });
+
+    charts.push({
+      type: 'pie',
+      title: `Distribution of ${mainStrCol}`,
+      labels,
+      values
+    });
+  }
+
+  return {
+    kpis,
+    charts,
+    summary: `Local Engine Analytics: Loaded ${data.length} records. Displaying aggregated metrics and comparisons for column values.`
+  };
+};
+
+const generateReportLocally = (
+  prompt: string,
+  columns: string[],
+  data: Record<string, any>[]
+): IGeminiReportResponse => {
+  const numericCols = columns.filter(col => {
+    return data.slice(0, 10).some(row => {
+      const val = Number(row[col]);
+      return !isNaN(val) && row[col] !== '';
+    });
+  });
+  const stringCols = columns.filter(col => !numericCols.includes(col));
+
+  const mainStrCol = stringCols.find(c => c.toLowerCase() === 'country' || c.toLowerCase() === 'category') || stringCols[0] || columns[0];
+  const mainNumCol = numericCols[0] || columns[columns.length - 1];
+
+  const groups: Record<string, { count: number; sum: number }> = {};
+  data.forEach(row => {
+    const key = String(row[mainStrCol] || 'Other');
+    const val = Number(row[mainNumCol]) || 0;
+    if (!groups[key]) {
+      groups[key] = { count: 0, sum: 0 };
+    }
+    groups[key].count += 1;
+    groups[key].sum += val;
+  });
+
+  const reportData = Object.entries(groups).map(([key, stats]) => {
+    const rowObj: Record<string, any> = {};
+    rowObj[mainStrCol] = key;
+    rowObj['Records Count'] = stats.count;
+    if (numericCols.length > 0) {
+      rowObj[`Sum of ${mainNumCol}`] = Math.round(stats.sum);
+      rowObj[`Average ${mainNumCol}`] = Math.round(stats.sum / stats.count);
+    }
+    return rowObj;
+  });
+
+  return {
+    title: `Local Analytics Report Grouped by ${mainStrCol}`,
+    summaryText: `Local Engine Summary: Computed and compiled frequencies and aggregations of ${data.length} items grouped under the primary "${mainStrCol}" categories.`,
+    reportData: reportData.slice(0, 10)
+  };
+};
+
+// ==========================================
+// CORE TRANSLATION EXPORTS
+// ==========================================
+
 // Convert user natural language commands to structured transform actions
 export const translateCommandToActions = async (
   prompt: string,
@@ -122,12 +403,9 @@ Only generate actions that can be fully satisfied. Match columns precisely to th
     );
     const cleanedText = cleanJsonResponse(responseText);
     return JSON.parse(cleanedText) as IGeminiTransformResponse;
-  } catch (error) {
-    console.error('Gemini transform parse error:', error);
-    return {
-      explanation: 'Failed to interpret command. Please make sure the command is clear.',
-      actions: []
-    };
+  } catch (error: any) {
+    console.warn('Gemini transform API failed, using local rule-based fallback:', error.message || error);
+    return parseCommandLocally(prompt, columns);
   }
 };
 
@@ -164,13 +442,9 @@ Return JSON with this schema:
     );
     const cleanedText = cleanJsonResponse(responseText);
     return JSON.parse(cleanedText) as IGeminiFormulaResponse;
-  } catch (err) {
-    return {
-      formula: '=N/A',
-      explanation: 'Unable to generate formula.',
-      expression: '',
-      targetColumn: 'Formula_Result'
-    };
+  } catch (err: any) {
+    console.warn('Gemini formula API failed, using local fallback:', err.message || err);
+    return generateFormulaLocally(prompt, columns);
   }
 };
 
@@ -213,13 +487,9 @@ Return a JSON object:
     );
     const cleanedText = cleanJsonResponse(responseText);
     return JSON.parse(cleanedText) as IGeminiDashboardResponse;
-  } catch (err) {
-    console.error('Dashboard logic error:', err);
-    return {
-      kpis: [],
-      charts: [],
-      summary: 'Could not generate analytics details.'
-    };
+  } catch (err: any) {
+    console.warn('Gemini dashboard API failed, using local analytics fallback:', err.message || err);
+    return generateDashboardLocally(prompt, columns, data);
   }
 };
 
@@ -255,12 +525,8 @@ Return a JSON object:
     );
     const cleanedText = cleanJsonResponse(responseText);
     return JSON.parse(cleanedText) as IGeminiReportResponse;
-  } catch (err) {
-    console.error('Report logic error:', err);
-    return {
-      title: 'AI Summary Report',
-      summaryText: 'Report compiled.',
-      reportData: []
-    };
+  } catch (err: any) {
+    console.warn('Gemini report API failed, using local pivot fallback:', err.message || err);
+    return generateReportLocally(prompt, columns, data);
   }
 };
