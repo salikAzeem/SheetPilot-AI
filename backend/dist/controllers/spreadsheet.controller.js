@@ -235,6 +235,10 @@ const getConnectedSheets = async (req, res) => {
 exports.getConnectedSheets = getConnectedSheets;
 // Import Google Sheets worksheet values
 const importGoogleSheet = async (req, res) => {
+    if (req.user?.isGuest) {
+        res.status(401).json({ error: 'Authentication required. Please sign in with Google to import spreadsheets.' });
+        return;
+    }
     const { spreadsheetId, sheetName = 'Sheet1' } = req.body;
     if (!spreadsheetId) {
         res.status(400).json({ error: 'Spreadsheet ID is required' });
@@ -292,6 +296,10 @@ const importGoogleSheet = async (req, res) => {
 exports.importGoogleSheet = importGoogleSheet;
 // Export active data back to Google Sheets
 const exportGoogleSheet = async (req, res) => {
+    if (req.user?.isGuest) {
+        res.status(401).json({ error: 'Authentication required. Please sign in with Google to export spreadsheets.' });
+        return;
+    }
     const { spreadsheetId, sheetName = 'Sheet1', columns, data } = req.body;
     if (!spreadsheetId || !columns || !data) {
         res.status(400).json({ error: 'Missing parameters' });
@@ -319,6 +327,10 @@ const exportGoogleSheet = async (req, res) => {
 exports.exportGoogleSheet = exportGoogleSheet;
 // Download active data as Excel XLSX file
 const downloadSpreadsheet = async (req, res) => {
+    if (req.user?.isGuest) {
+        res.status(401).json({ error: 'Authentication required. Please sign in with Google to download spreadsheets.' });
+        return;
+    }
     const { columns, data, filename = 'SheetPilot_Export.xlsx' } = req.body;
     if (!columns || !data) {
         res.status(400).json({ error: 'Missing columns or data' });

@@ -3,34 +3,34 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Privacy Policy | SheetPilot AI" description="Privacy Policy and data practices for SheetPilot AI.">
-  <div className="min-h-screen bg-canvas-soft text-ink font-sans relative py-16 px-4 md:px-8">
-    <div className="mesh-gradient-bg" />
+  <div class="min-h-screen bg-canvas-soft text-ink font-sans relative py-16 px-4 md:px-8">
+    <div class="mesh-gradient-bg" />
     
-    <div className="max-w-3xl mx-auto bg-canvas border border-hairline rounded-xl shadow-xl p-8 md:p-12 relative z-10 space-y-8">
+    <div class="max-w-3xl mx-auto bg-canvas border border-hairline rounded-xl shadow-xl p-8 md:p-12 relative z-10 space-y-8">
       
-      {/* Header */}
-      <div className="border-b border-hairline pb-6">
-        <h1 className="display-sm font-semibold text-ink">Privacy Policy</h1>
-        <p className="text-xs text-mute mt-2">Last updated: June 12, 2026</p>
+      <!-- Header -->
+      <div class="border-b border-hairline pb-6">
+        <h1 class="display-sm font-semibold text-ink">Privacy Policy</h1>
+        <p class="text-xs text-mute mt-2">Last updated: June 12, 2026</p>
       </div>
 
-      {/* Intro */}
-      <div className="text-xs text-body leading-relaxed space-y-4">
+      <!-- Intro -->
+      <div class="text-xs text-body leading-relaxed space-y-4">
         <p>
           At SheetPilot AI, we are committed to protecting your privacy and ensuring a secure experience while utilizing our natural language spreadsheet assistant. This Privacy Policy details how we handle, protect, and process user data, specifically regarding Google OAuth APIs and spreadsheet synchronization.
         </p>
       </div>
 
-      {/* Sections */}
-      <div className="space-y-6">
+      <!-- Sections -->
+      <div class="space-y-6">
         
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink">1. Data We Access and Collect</h2>
-          <div className="text-xs text-body leading-relaxed space-y-2">
+        <section class="space-y-3">
+          <h2 class="text-sm font-semibold text-ink">1. Data We Access and Collect</h2>
+          <div class="text-xs text-body leading-relaxed space-y-2">
             <p>
               When you sign in using your Google Account, we request specific scopes to allow the application to function. We access the following information:
             </p>
-            <ul className="list-disc pl-5 space-y-1">
+            <ul class="list-disc pl-5 space-y-1">
               <li><strong>Basic Profile Information:</strong> Your email address, full name, and profile picture, which are used solely to create and identify your account.</li>
               <li><strong>Google Sheets Files:</strong> Through the requested <code>https://www.googleapis.com/auth/spreadsheets</code> scope, the app accesses the specific spreadsheet sheets you sync or open in order to execute your plain English cleanup/formatting commands.</li>
               <li><strong>Google Drive Files:</strong> Through the <code>https://www.googleapis.com/auth/drive.readonly</code> scope, we list available spreadsheets to let you easily import files from your Google Drive into the workspace.</li>
@@ -38,13 +38,13 @@ import Layout from '../layouts/Layout.astro';
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink">2. How We Use Your Data</h2>
-          <div className="text-xs text-body leading-relaxed space-y-2">
+        <section class="space-y-3">
+          <h2 class="text-sm font-semibold text-ink">2. How We Use Your Data</h2>
+          <div class="text-xs text-body leading-relaxed space-y-2">
             <p>
               We only use the data retrieved from Google APIs to perform the operations you explicitly direct.
             </p>
-            <ul className="list-disc pl-5 space-y-1">
+            <ul class="list-disc pl-5 space-y-1">
               <li>We perform spreadsheet transformations (deleting rows, formatting columns, generating formulas, compiling charts) strictly at your command.</li>
               <li>Spreadsheet data is processed and displayed inside your browser session.</li>
               <li>Your Google OAuth credentials (refresh tokens) are securely encrypted and stored on our database cluster (MongoDB Atlas) to maintain your connection, and are never shared with third parties.</li>
@@ -52,35 +52,35 @@ import Layout from '../layouts/Layout.astro';
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink">3. Data Retention and Safety</h2>
-          <div className="text-xs text-body leading-relaxed space-y-2">
+        <section class="space-y-3">
+          <h2 class="text-sm font-semibold text-ink">3. Data Retention and Safety</h2>
+          <div class="text-xs text-body leading-relaxed space-y-2">
             <p>
               We prioritize data safety and do not retain copies of your spreadsheet data on our servers longer than necessary to run your requested AI operations.
             </p>
-            <ul className="list-disc pl-5 space-y-1">
+            <ul class="list-disc pl-5 space-y-1">
               <li>All API interactions between the frontend, our backend server, and the Google API servers are fully encrypted using Transport Layer Security (TLS/SSL).</li>
               <li>We do not sell, trade, or rent any of your spreadsheet or profile data.</li>
             </ul>
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink">4. Google API Services User Data Policy Compliance</h2>
-          <div className="text-xs text-body leading-relaxed">
+        <section class="space-y-3">
+          <h2 class="text-sm font-semibold text-ink">4. Google API Services User Data Policy Compliance</h2>
+          <div class="text-xs text-body leading-relaxed">
             <p>
-              SheetPilot AI's use of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" className="text-link underline hover:text-ink">Google API Services User Data Policy</a>, including the Limited Use requirements.
+              SheetPilot AI's use of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" class="text-link underline hover:text-ink">Google API Services User Data Policy</a>, including the Limited Use requirements.
             </p>
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink">5. Contact Us</h2>
-          <div className="text-xs text-body leading-relaxed">
+        <section class="space-y-3">
+          <h2 class="text-sm font-semibold text-ink">5. Contact Us</h2>
+          <div class="text-xs text-body leading-relaxed">
             <p>
               If you have any questions about this Privacy Policy or wish to request the deletion of your account and linked OAuth tokens, please contact us at:
             </p>
-            <p className="mt-2 font-semibold text-ink">
+            <p class="mt-2 font-semibold text-ink">
               Email: salikazeem123@gmail.com
             </p>
           </div>
@@ -88,12 +88,12 @@ import Layout from '../layouts/Layout.astro';
 
       </div>
 
-      {/* Button to go back */}
-      <div className="border-t border-hairline pt-6 flex justify-between items-center">
-        <a href="/" className="btn-secondary text-xs inline-flex items-center gap-1.5 transition-all">
+      <!-- Button to go back -->
+      <div class="border-t border-hairline pt-6 flex justify-between items-center">
+        <a href="/" class="btn-secondary text-xs inline-flex items-center gap-1.5 transition-all">
           &larr; Back to Landing Page
         </a>
-        <a href="/auth/login" className="btn-primary text-xs inline-flex items-center gap-1.5 transition-all shadow">
+        <a href="/auth/login" class="btn-primary text-xs inline-flex items-center gap-1.5 transition-all shadow">
           Go to Sign In &rarr;
         </a>
       </div>
